@@ -73,7 +73,6 @@ export default function Home() {
   //   console.log("1", badge);
   // }, [badge]);
 
-  const [drawerTitle, setDrawerTitle] = useState("");
   const handleCart = () => {
     if (badgeCount === 0) {
       return notifyEmptyCart();
@@ -84,22 +83,14 @@ export default function Home() {
   };
 
   const [itemCount, setItemCount] = useState(1);
-  const [itemTotalPrice, setItemTotalPrice] = useState("");
 
   const increase = () => {
     setItemCount((itemCount) => itemCount + 1);
-    setItemTotalPrice((itemTotalPrice) => itemTotalPrice + itemTotalPrice);
   };
 
   const decline = () => {
     setItemCount((itemCount) => itemCount - 1);
   };
-
-  useEffect(() => {
-    // setItemTotalPrice();
-    // (itemTotalPrice) =>
-    console.log("1", itemTotalPrice);
-  }, [itemCount]);
 
   const [visible, setVisible] = useState(false);
   const [childrenDrawer, setChildrenDrawer] = useState(false);
@@ -201,17 +192,14 @@ export default function Home() {
             style={{ width: 450, marginTop: 16 }}
             actions={[
               <p key="itemPrice" style={{ cursor: "default" }}>
-                Total - R$ {itemTotalPrice ? itemTotalPrice : product.price}
+                Total - R$ {product.price}
               </p>,
               <Button.Group>
                 <Button onClick={decline} icon={<MinusOutlined />} />
                 <span style={{ fontSize: "24px", margin: "0 10px" }}>
                   {itemCount}
                 </span>
-                <Button
-                  onClick={(() => setItemTotalPrice(product.price), increase)}
-                  icon={<PlusOutlined />}
-                />
+                <Button onClick={increase} icon={<PlusOutlined />} />
               </Button.Group>,
             ]}
           >
