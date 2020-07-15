@@ -9,8 +9,13 @@ import {
   Button,
   Form,
   Input,
+  Avatar,
 } from "antd";
-import { ShoppingCartOutlined } from "@ant-design/icons";
+import {
+  ShoppingCartOutlined,
+  MinusOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import "./styles.css";
 import productService from "../../services/productService";
 import pizza from "../../assets/images/pizza-1317699_1920.jpg";
@@ -39,33 +44,62 @@ export default function Home() {
 
   const [products, setProducts] = useState([]);
 
-  async function loadProducts() {
-    const response = await productService.list();
-    const data = await response.data;
-
-    setProducts(data);
-  }
-
   useEffect(() => {
+    async function loadProducts() {
+      const response = await productService.list();
+      const data = await response.data.filter((response) => response.available);
+
+      setProducts(data);
+    }
+
     loadProducts();
   }, []);
 
   const [badgeCount, setBadgeCount] = useState(0);
-  const [list, setList] = useState([]);
+  const [badge, setBadge] = useState([]);
 
   const addItem = (product) => {
-    list.push(product);
-    setList(list);
-    setBadgeCount(badgeCount + 1);
+    setBadgeCount((prevCount) => prevCount + 1);
+    setBadge([
+      ...badge,
+      {
+        product,
+      },
+    ]);
     notifyAddItem();
   };
 
+  // useEffect(() => {
+  //   console.log("1", badge);
+  // }, [badge]);
+
+  const [drawerTitle, setDrawerTitle] = useState("");
   const handleCart = () => {
     if (badgeCount === 0) {
       return notifyEmptyCart();
+      // setDrawerTitle("Seu carrinho está vazio");
     }
+
     showDrawer();
   };
+
+  const [itemCount, setItemCount] = useState(1);
+  const [itemTotalPrice, setItemTotalPrice] = useState("");
+
+  const increase = () => {
+    setItemCount((itemCount) => itemCount + 1);
+    setItemTotalPrice((itemTotalPrice) => itemTotalPrice + itemTotalPrice);
+  };
+
+  const decline = () => {
+    setItemCount((itemCount) => itemCount - 1);
+  };
+
+  useEffect(() => {
+    // setItemTotalPrice();
+    // (itemTotalPrice) =>
+    console.log("1", itemTotalPrice);
+  }, [itemCount]);
 
   const [visible, setVisible] = useState(false);
   const [childrenDrawer, setChildrenDrawer] = useState(false);
@@ -74,7 +108,7 @@ export default function Home() {
     setVisible(true);
   };
 
-  const onClose = () => {
+  const onCloseDrawer = () => {
     setVisible(false);
   };
 
@@ -88,6 +122,8 @@ export default function Home() {
 
   const onFinish = (values) => {
     console.log("Success:", values);
+    onChildrenDrawerClose();
+    onCloseDrawer();
   };
 
   const onFinishFailed = (errorInfo) => {
@@ -95,7 +131,7 @@ export default function Home() {
   };
 
   return (
-    <>
+    <div ref={ref}>
       <Layout>
         <Header className="header">
           <div className="menu-title">Delivery</div>
@@ -132,13 +168,15 @@ export default function Home() {
                   <Popconfirm
                     key="popConform"
                     title="Adicionar ao carrinho?"
-                    onConfirm={() => addItem(product)}
+                    // onConfirm={() => setList([product])}
+                    onConfirm={() => {
+                      addItem(product);
+                    }}
                   >
                     <ShoppingCartOutlined
                       key="cartIconCart"
                       fill="currentColor"
                     />
-                    ,
                   </Popconfirm>,
                 ]}
               >
@@ -152,17 +190,48 @@ export default function Home() {
           </Footer> */}
       </Layout>
       <Drawer
-        title="Multi-level drawer"
-        width={520}
+        title={""}
+        width={500}
         closable={false}
-        onClose={onClose}
+        onClose={onCloseDrawer}
         visible={visible}
       >
-        <Button type="primary" ref={ref} onClick={showChildrenDrawer}>
-          Two-level drawer
+        {badge.map(({ product }) => (
+          <Card
+            style={{ width: 450, marginTop: 16 }}
+            actions={[
+              <p key="itemPrice" style={{ cursor: "default" }}>
+                Total - R$ {itemTotalPrice ? itemTotalPrice : product.price}
+              </p>,
+              <Button.Group>
+                <Button onClick={decline} icon={<MinusOutlined />} />
+                <span style={{ fontSize: "24px", margin: "0 10px" }}>
+                  {itemCount}
+                </span>
+                <Button
+                  onClick={(() => setItemTotalPrice(product.price), increase)}
+                  icon={<PlusOutlined />}
+                />
+              </Button.Group>,
+            ]}
+          >
+            <Meta
+              avatar={<Avatar shape="square" size={128} src={pizza} />}
+              title={product.name}
+              description={`R$ ${product.price}`}
+            />
+          </Card>
+        ))}
+        <Button
+          type="primary"
+          ref={ref}
+          onClick={showChildrenDrawer}
+          style={{ marginTop: 26 }}
+        >
+          Finalizar Pedido
         </Button>
         <Drawer
-          title="Two-level Drawer"
+          title="Preencha os campos abaixo para finalizar o pedido"
           width={320}
           closable={false}
           onClose={onChildrenDrawerClose}
@@ -176,11 +245,9 @@ export default function Home() {
             onFinishFailed={onFinishFailed}
           >
             <Form.Item
-              label="Username"
-              name="username"
-              rules={[
-                { required: true, message: "Please input your username!" },
-              ]}
+              label="Name"
+              name="name"
+              rules={[{ required: true, message: "Please input your name!" }]}
             >
               <Input />
             </Form.Item>
@@ -201,12 +268,12 @@ export default function Home() {
 
             <Form.Item {...tailLayout}>
               <Button type="primary" htmlType="submit">
-                Submit
+                Finalizar
               </Button>
             </Form.Item>
           </Form>
         </Drawer>
       </Drawer>
-    </>
+    </div>
   );
 }
